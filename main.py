@@ -88,16 +88,28 @@ class TokenResponse(BaseModel):
     token_type: str
     expires_in: int
 
+from pydantic import BaseModel, Field, field_validator
+import ipaddress
+import re
+from typing import List
+
 class DNSConfigRequest(BaseModel):
-    user_id: str = Field(..., pattern=r'^[a-zA-Z0-9_-]+$', min_length=1, max_length=50)
+    user_id: str = Field(..., min_length=1, max_length=150)
     ip_subnet: str
     domain_categories: List[str] = Field(default=[])
     custom_domains: List[str] = Field(default=[])
     vpn_bypass: bool = Field(default=True)
     
+    @field_validator('user_id')
+    @classmethod
+    def strip_whitespace(cls, v: str) -> str:
+        """Strip leading/trailing whitespace from user_id"""
+        return v.strip()
+    
     @field_validator('ip_subnet')
     @classmethod
-    def validate_subnet(cls, v):
+    def validate_subnet(cls, v: str) -> str:
+        """Validate IP subnet format"""
         try:
             ipaddress.ip_network(v, strict=False)
             return v
@@ -106,7 +118,8 @@ class DNSConfigRequest(BaseModel):
     
     @field_validator('domain_categories')
     @classmethod
-    def validate_categories(cls, v):
+    def validate_categories(cls, v: List[str]) -> List[str]:
+        """Validate domain categories are from allowed set"""
         valid_categories = {'social', 'porn', 'gambling', 'fakenews', 'default'}
         for item in v:
             if item not in valid_categories:
@@ -115,7 +128,8 @@ class DNSConfigRequest(BaseModel):
     
     @field_validator('custom_domains')
     @classmethod
-    def validate_domains(cls, v):
+    def validate_domains(cls, v: List[str]) -> List[str]:
+        """Validate domain format and normalize to lowercase"""
         domain_pattern = r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$'
         validated_domains = []
         for domain in v:
