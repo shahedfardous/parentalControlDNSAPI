@@ -148,6 +148,33 @@ CATEGORY_URLS = {
     'porn': 'https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn-only/hosts',
     'social': 'https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/social-only/hosts'
 }
+# # Static category domains
+# STATIC_CATEGORY_DOMAINS = {
+#     "porn": [
+#         "pornhub.com", "xvideos.com", "xnxx.com", "redtube.com", "brazzers.com"
+#     ],
+#     "gambling": [
+#         "bet365.com", "pokerstars.com", "casino.com"
+#     ],
+#     "social": [
+#         "facebook.com", "twitter.com", "instagram.com"
+#     ],
+#     "fakenews": [
+#         "infowars.com", "breitbart.com"
+#     ],
+#     "default": []
+# }
+
+# Static category domains
+STATIC_CATEGORY_DOMAINS = {
+    "porn": [
+        "cdn.ampproject.org", "xvideos.com", "xnxx.com", "redtube.com", "brazzers.com"
+    ],
+    "gambling": [],
+    "social": [],
+    "fakenews": [],
+    "default": []
+}
 
 # Common VPN domains to block
 VPN_DOMAINS = [
@@ -668,12 +695,9 @@ async def update_dns_config(
     config: DNSConfigRequest,
     token_data: dict = Depends(verify_jwt_token)
 ):
-    """Update DNS configuration for a client"""
     logger.info(f"Updating DNS config for {config.user_id}")
-    
     try:
         category_domains = set()
-        
         # Fetch domains from selected categories
         async with aiohttp.ClientSession() as session:
             for category in config.domain_categories:
@@ -681,7 +705,12 @@ async def update_dns_config(
                     domains = await fetch_hosts_data(CATEGORY_URLS[category], session)
                     category_domains.update(domains)
                     logger.info(f"Added {len(domains)} domains from {category} category")
-        
+                # Add static domains for this category
+                if category in STATIC_CATEGORY_DOMAINS:
+                    static_domains = STATIC_CATEGORY_DOMAINS[category]
+                    category_domains.update(static_domains)
+                    logger.info(f"Added {len(static_domains)} static domains for {category}")
+
         # Create a copy of all domains starting with category domains
         all_domains = category_domains.copy()
         
