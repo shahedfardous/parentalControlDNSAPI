@@ -96,9 +96,9 @@ from typing import List
 class DNSConfigRequest(BaseModel):
     user_id: str = Field(..., min_length=1, max_length=150)
     ip_subnet: str
-    domain_categories: List[str] = Field(default=[])
-    custom_domains: List[str] = Field(default=[])
-    vpn_bypass: bool = Field(default=True)
+    domain_categories: List[str] = Field(Adware_Malware=[])
+    custom_domains: List[str] = Field(Adware_Malware=[])
+    vpn_bypass: bool = Field(Adware_Malware=True)
     
     @field_validator('user_id')
     @classmethod
@@ -120,7 +120,7 @@ class DNSConfigRequest(BaseModel):
     @classmethod
     def validate_categories(cls, v: List[str]) -> List[str]:
         """Validate domain categories are from allowed set"""
-        valid_categories = {'social', 'porn', 'gambling', 'fakenews', 'default'}
+        valid_categories = {'Social_Networking', 'Adult_Content', 'Gambling', 'Fake_News', 'Adware_Malware'}
         for item in v:
             if item not in valid_categories:
                 raise ValueError(f'Invalid category: {item}. Must be one of {valid_categories}')
@@ -156,38 +156,38 @@ hosts_cache = {}
 
 # Category to URL mapping
 CATEGORY_URLS = {
-    'default': 'https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts',
-    'fakenews': 'https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-only/hosts',
-    'gambling': 'https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/gambling-only/hosts',
-    'porn': 'https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn-only/hosts',
-    'social': 'https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/social-only/hosts'
+    'Adware_Malware': 'https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts',
+    'Fake_News': 'https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/Fake_News-only/hosts',
+    'Gambling': 'https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/Gambling-only/hosts',
+    'Adult_Content': 'https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/Adult_Content-only/hosts',
+    'Social_Networking': 'https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/Social_Networking-only/hosts'
 }
 # # Static category domains
 # STATIC_CATEGORY_DOMAINS = {
-#     "porn": [
-#         "pornhub.com", "xvideos.com", "xnxx.com", "redtube.com", "brazzers.com"
+#     "Adult_Content": [
+#         "Adult_Contenthub.com", "xvideos.com", "xnxx.com", "redtube.com", "brazzers.com"
 #     ],
-#     "gambling": [
+#     "Gambling": [
 #         "bet365.com", "pokerstars.com", "casino.com"
 #     ],
-#     "social": [
+#     "Social_Networking": [
 #         "facebook.com", "twitter.com", "instagram.com"
 #     ],
-#     "fakenews": [
+#     "Fake_News": [
 #         "infowars.com", "breitbart.com"
 #     ],
-#     "default": []
+#     "Adware_Malware": []
 # }
 
 # Static category domains
 STATIC_CATEGORY_DOMAINS = {
-    "porn": [
+    "Adult_Content": [
         "cdn.ampproject.org", "xvideos.com", "xnxx.com", "redtube.com", "brazzers.com"
     ],
-    "gambling": [],
-    "social": [],
-    "fakenews": [],
-    "default": []
+    "Gambling": [],
+    "Social_Networking": [],
+    "Fake_News": [],
+    "Adware_Malware": []
 }
 
 # Common VPN domains to block
@@ -462,10 +462,10 @@ view "{user_id}_view" {{
         is_first_config = "view" not in content
 
         if is_first_config:
-            # For first configuration, add everything including default view
-            default_view = """
-// Default view for non-matched clients
-view "default" {
+            # For first configuration, add everything including Adware_Malware view
+            Adware_Malware_view = """
+// Adware_Malware view for non-matched clients
+view "Adware_Malware" {
     match-clients { any; };
     recursion yes;
     
@@ -496,9 +496,9 @@ view "default" {
         zone "rpz.staticentry.local";
     } recursive-only yes;
 };"""
-            content = content.rstrip() + "\n\n" + new_config + "\n" + default_view
+            content = content.rstrip() + "\n\n" + new_config + "\n" + Adware_Malware_view
         else:
-            # For subsequent configurations, just insert before default view
+            # For subsequent configurations, just insert before Adware_Malware view
             # First remove any existing config for this user
             acl_pattern = rf'\/\/ Define ACL for {re.escape(user_id)}.*?}};'
             view_pattern = rf'view "{re.escape(user_id)}_view".*?^}};'
@@ -506,10 +506,10 @@ view "default" {
             content = re.sub(acl_pattern, '', content, flags=re.MULTILINE | re.DOTALL)
             content = re.sub(view_pattern, '', content, flags=re.MULTILINE | re.DOTALL)
             
-            # Insert new config before default view
-            default_view_pos = content.find('view "default"')
-            if default_view_pos != -1:
-                content = content[:default_view_pos] + new_config + content[default_view_pos:]
+            # Insert new config before Adware_Malware view
+            Adware_Malware_view_pos = content.find('view "Adware_Malware"')
+            if Adware_Malware_view_pos != -1:
+                content = content[:Adware_Malware_view_pos] + new_config + content[Adware_Malware_view_pos:]
             else:
                 content = content.rstrip() + "\n\n" + new_config
 
@@ -905,7 +905,7 @@ async def get_config_details(
         view_pattern = rf'view "{re.escape(user_id)}_view".*?^}};'
         view_match = re.search(view_pattern, config_content, re.MULTILINE | re.DOTALL)
         
-        # Default values
+        # Adware_Malware values
         blocked_categories = []
         vpn_blocked = False
         custom_domains = []
@@ -933,15 +933,15 @@ async def get_config_details(
         if not blocked_categories:
             # Check for common domains from each category
             for category, url in CATEGORY_URLS.items():
-                if category == 'default':
+                if category == 'Adware_Malware':
                     continue
                     
                 # Sample domains for each category
                 category_samples = {
-                    'porn': ['pornhub.com', 'xvideos.com', 'xnxx.com'],
-                    'gambling': ['bet365.com', 'pokerstars.com', 'casino.com'],
-                    'social': ['facebook.com', 'twitter.com', 'instagram.com'],
-                    'fakenews': ['infowars.com', 'breitbart.com']
+                    'Adult_Content': ['Adult_Contenthub.com', 'xvideos.com', 'xnxx.com'],
+                    'Gambling': ['bet365.com', 'pokerstars.com', 'casino.com'],
+                    'Social_Networking': ['facebook.com', 'twitter.com', 'instagram.com'],
+                    'Fake_News': ['infowars.com', 'breitbart.com']
                 }
                 
                 if category in category_samples:
