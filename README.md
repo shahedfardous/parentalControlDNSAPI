@@ -203,10 +203,6 @@ Replace the simple authentication in the `/login` endpoint with your preferred a
 ### Monitoring
 The application provides health check and system status endpoints for monitoring integration.
 
-## License
-
-This project is provided as-is for educational and personal use. Please ensure compliance with domain list sources and local regulations when deploying.
-
 ## Support
 
 For issues and questions:
